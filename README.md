@@ -33,7 +33,7 @@ Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 | `GDRIVE_FOLDER_ID` | your folder ID | From your Google Drive share link |
 | `IMAGE_FOLDER` | `~/slideshow_cache/` | Local cache folder on the Pi (auto-created) |
 | `GDRIVE_SYNC_INTERVAL` | `300` | Seconds between Drive sync checks (5 min) |
-| `SLIDE_DURATION` | `30` | Seconds per image |
+| `SLIDE_DURATION` | `3` | Seconds per image |
 | `TRANSITION` | `"crossfade"` | `"crossfade"` or `"cut"` |
 | `IMAGE_ORDER` | `"random"` | `"random"` or `"sequential"` |
 | `LATITUDE` | `33.749` | Your latitude (for weather) |
@@ -49,9 +49,9 @@ Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 ### Finding Your Google Drive Folder ID
 Your folder share link looks like:
 ```
-https://drive.google.com/drive/folders/1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS?usp=sharing
+https://drive.google.com/drive/folders/1eJzfxxxxxxxxxxxxxxxxxxxxxxx?usp=sharing
 ```
-The folder ID is the long string between `/folders/` and `?` — in this example: `1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS`
+The folder ID is the long string between `/folders/` and `?` — in this example: `1eJzfxxxxxxxxxxxxxxxxxxxxxxx`
 
 ---
 
