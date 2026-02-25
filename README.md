@@ -26,15 +26,18 @@ chmod +x ~/slideshow.py
 
 Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 
-| Setting | Default | Description |
+| Setting | Value | Description |
 |---|---|---|
-| `IMAGE_FOLDER` | `~/Dropbox/Slideshow/` | Path to your photos |
+| `GDRIVE_API_KEY` | your key | Google Drive API key (see Section 4) |
+| `GDRIVE_FOLDER_ID` | your folder ID | From your Google Drive share link |
+| `IMAGE_FOLDER` | `~/slideshow_cache/` | Local cache folder on the Pi (auto-created) |
+| `GDRIVE_SYNC_INTERVAL` | `300` | Seconds between Drive sync checks (5 min) |
 | `SLIDE_DURATION` | `30` | Seconds per image |
 | `TRANSITION` | `"crossfade"` | `"crossfade"` or `"cut"` |
 | `IMAGE_ORDER` | `"random"` | `"random"` or `"sequential"` |
-| `LATITUDE` | `33.749` | Your latitude |
-| `LONGITUDE` | `-84.388` | Your longitude |
-| `TEMP_UNIT` | `"F"` | `"F"` or `"C"` |
+| `LATITUDE` | `33.749` | Your latitude (for weather) |
+| `LONGITUDE` | `-84.388` | Your longitude (for weather) |
+| `TEMP_UNIT` | `"F"` | `"F"` for Fahrenheit, `"C"` for Celsius |
 
 ### Finding Your Latitude & Longitude
 1. Open **Google Maps** on your phone or computer
@@ -42,12 +45,61 @@ Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 3. The coordinates appear at the top of the info card, e.g. `33.749, -84.388`
 4. Copy those values into the config block
 
-Create your Dropbox account with my referral link: https://www.dropbox.com/referrals/AABM93kzApsrSk1WwnwU3B42h8mNf_zrPq8?src=global9
-Create Dropbox Folder with Public Link
+### Finding Your Google Drive Folder ID
+Your folder share link looks like:
+```
+https://drive.google.com/drive/folders/1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS?usp=sharing
+```
+The folder ID is the long string between `/folders/` and `?` — in this example: `1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS`
 
 ---
 
-## 4. Install the systemd Service
+## 4. Set Up Google Drive (one-time, ~5 min)
+
+Photos are managed entirely from your phone via Google Drive — no Dropbox, no daemon, nothing extra installed on the Pi.
+
+### Step 1 — Create and share your photo folder
+1. Open **Google Drive** on your phone or computer
+2. Tap **"+ New"** → **"Folder"** → name it `Slideshow`
+3. Add your photos to the folder
+4. Right-click (or long-press) the folder → **"Share"** → **"Change to anyone with the link"** → set to **"Viewer"** → copy the link
+
+### Step 2 — Get a free Google Drive API key
+1. Go to **https://console.cloud.google.com** and sign in
+2. Click **"Select a project"** → **"New Project"** → name it anything → **"Create"**
+3. In the left menu go to **"APIs & Services"** → **"Library"**
+4. Search for **"Google Drive API"** → click it → click **"Enable"**
+5. Go to **"APIs & Services"** → **"Credentials"**
+6. Click **"+ Create Credentials"** → **"API Key"**
+7. Copy the key (looks like `AIzaSyB_xxxxxxxxxxxxxxxxxxxxxxx`)
+8. Paste it into the `GDRIVE_API_KEY` config variable in `slideshow.py`
+
+> No billing required. The free tier allows far more requests per day than this project will ever use.
+
+### Step 3 — Managing photos going forward
+To add or remove photos just open the **Google Drive** app on your phone, go to your Slideshow folder, and add/delete photos as normal. The Pi checks for changes every 5 minutes and updates the local cache automatically.
+
+---
+
+## 5. Run the Script
+
+```bash
+python3 ~/slideshow.py
+```
+
+On first launch you'll see **"Syncing photos from Google Drive..."** on screen while photos download. Once cached they display immediately on future runs. Expected terminal output:
+
+```
+[GDrive] Starting sync...
+[GDrive] Found 6 image(s) in Drive folder.
+[GDrive] Downloading: photo1.jpg
+[GDrive] Saved: photo1.jpg (1842 KB)
+[GDrive] Sync complete.
+```
+
+---
+
+## 6. Autostart on Boot (systemd)
 
 ```bash
 # Copy the service file
@@ -70,50 +122,7 @@ sudo systemctl disable slideshow@pi.service
 
 ---
 
-## 5. Install Dropbox (Headless) on Raspberry Pi OS
-
-Dropbox lets you manage photos from your phone and they automatically appear on the Pi.
-
-### Step 1 — Download the Dropbox daemon
-```bash
-cd ~ && wget -O - "https://www.dropbox.com/download?plat=lnx.armv7hf" | tar xzf -
-```
-> For 64-bit Pi OS use `lnx.aarch64` instead of `lnx.armv7hf`
-
-### Step 2 — Start Dropbox and link your account
-```bash
-~/.dropbox-dist/dropboxd &
-```
-Dropbox will print a URL like:
-```
-Please visit https://www.dropbox.com/cli_link_nonce?nonce=XXXX to link this device.
-```
-Open that URL on your phone or computer and sign in — the Pi will link automatically.
-
-### Step 3 — Install the Dropbox CLI (optional but recommended)
-```bash
-sudo wget -O /usr/local/bin/dropbox \
-  "https://www.dropbox.com/download?dl=packages/dropbox.py"
-sudo chmod +x /usr/local/bin/dropbox
-dropbox status
-```
-
-### Step 4 — Auto-start Dropbox on boot
-```bash
-# Add to crontab
-crontab -e
-```
-Add this line:
-```
-@reboot /bin/bash -c "~/.dropbox-dist/dropboxd &"
-```
-
-### Step 5 — Create the Slideshow folder
-In the Dropbox app on your phone, create a folder called **Slideshow** and add your photos there. They'll sync to `~/Dropbox/Slideshow/` on the Pi automatically.
-
----
-
-## 6. Touch Controls
+## 7. Touch Controls
 
 | Touch Area | Action |
 |---|---|
@@ -125,20 +134,36 @@ Keyboard shortcuts also work: `←` / `→` to navigate, `Esc` to quit.
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
-**Screen goes blank:** Make sure the script is running — it calls `xset s off` and `xset -dpms` on startup. You can also add these to `/etc/xdg/lxsession/LXDE-pi/autostart`:
+**"Syncing photos from Google Drive..." never goes away:**
+- Check the terminal for error messages
+- Confirm the folder is shared as "Anyone with the link" (Viewer)
+- Confirm the Google Drive API is enabled in your Google Cloud project
+- Confirm your API key is correct in the config
+
+**`403 forbidden` error in terminal:**
+The Drive API is not enabled for your API key. Go to console.cloud.google.com → APIs & Services → Library → search "Google Drive API" → Enable.
+
+**`0 files found` in terminal:**
+The folder sharing setting is wrong. Open Google Drive, right-click the Slideshow folder → Share → make sure it says "Anyone with the link" not "Restricted".
+
+**Screen goes blank:**
+The script calls `xset s off` and `xset s noblank` on startup. If blanking still occurs, add these lines to `/etc/xdg/lxsession/LXDE-pi/autostart`:
 ```
 @xset s off
 @xset -dpms
 @xset s noblank
 ```
 
-**Weather shows "unavailable":** Check your latitude/longitude values and that the Pi has internet access. The script retries every 10 minutes automatically.
+**Weather shows "unavailable":**
+Check your latitude/longitude values and that the Pi has internet access. The script retries every 10 minutes automatically.
 
-**Images not loading:** Confirm the folder path in the config and that photos are in `.jpg`, `.jpeg`, `.png`, or `.gif` format.
+**Images not loading from cache:**
+Supported formats are `.jpg`, `.jpeg`, `.png`, `.gif`, and `.webp`. Other formats (HEIC, RAW, etc.) are not supported — convert them to JPG before uploading to Drive.
 
-**Font looks wrong:** If `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` is missing, install it:
+**Font looks wrong:**
+If `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` is missing, install it:
 ```bash
 sudo apt install -y fonts-dejavu-core
 ```
