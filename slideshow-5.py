@@ -21,10 +21,10 @@ import subprocess
 # ============================================================
 
 # Google Drive API key (from console.cloud.google.com)
-GDRIVE_API_KEY        = "AIzaSyBYhpyxe3LJjkIGksDm--egjxDwXBYhCu8"
+GDRIVE_API_KEY        = "xxx"
 
 # Google Drive folder ID (the long string from your share link)
-GDRIVE_FOLDER_ID      = "1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS"
+GDRIVE_FOLDER_ID      = "xxx"
 
 # Local folder where synced photos are cached on the Pi
 IMAGE_FOLDER          = os.path.expanduser("~/slideshow_cache/")
