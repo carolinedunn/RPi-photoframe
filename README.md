@@ -42,6 +42,9 @@ Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 3. The coordinates appear at the top of the info card, e.g. `33.749, -84.388`
 4. Copy those values into the config block
 
+Create your Dropbox account with my referral link: https://www.dropbox.com/referrals/AABM93kzApsrSk1WwnwU3B42h8mNf_zrPq8?src=global9
+Create Dropbox Folder with Public Link
+
 ---
 
 ## 4. Install the systemd Service
