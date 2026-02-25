@@ -4,10 +4,11 @@
 
 ```bash
 sudo apt update
-sudo apt install -y python3-pygame
+sudo apt install -y python3-pygame python3-pil libheif-dev
+pip install pillow-heif --break-system-packages
 ```
 
-No other Python packages are needed — `urllib` is built into Python 3.
+`urllib` is built into Python 3 so no extra install is needed for networking or weather. `pillow-heif` enables automatic HEIC/HEIF conversion for iPhone photos — if you only upload JPGs you can skip that last line.
 
 ---
 
@@ -160,7 +161,10 @@ The script calls `xset s off` and `xset s noblank` on startup. If blanking still
 Check your latitude/longitude values and that the Pi has internet access. The script retries every 10 minutes automatically.
 
 **Images not loading from cache:**
-Supported formats are `.jpg`, `.jpeg`, `.png`, `.gif`, and `.webp`. Other formats (HEIC, RAW, etc.) are not supported — convert them to JPG before uploading to Drive.
+Supported formats are `.jpg`, `.jpeg`, `.png`, `.gif`, and `.webp`. HEIC/HEIF files from iPhones are automatically converted to JPG during sync as long as `pillow-heif` is installed. RAW files are not supported. If HEIC conversion is not working, run:
+```bash
+pip install pillow-heif --break-system-packages
+```
 
 **Font looks wrong:**
 If `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` is missing, install it:
