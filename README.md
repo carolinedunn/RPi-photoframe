@@ -17,6 +17,7 @@ pip install pillow-heif --break-system-packages
 Place `slideshow.py` in your home directory:
 
 ```bash
+cd RPi-photoframe
 cp slideshow.py ~/slideshow.py
 chmod +x ~/slideshow.py
 ```
@@ -33,7 +34,7 @@ Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 | `GDRIVE_FOLDER_ID` | your folder ID | From your Google Drive share link |
 | `IMAGE_FOLDER` | `~/slideshow_cache/` | Local cache folder on the Pi (auto-created) |
 | `GDRIVE_SYNC_INTERVAL` | `300` | Seconds between Drive sync checks (5 min) |
-| `SLIDE_DURATION` | `3` | Seconds per image |
+| `SLIDE_DURATION` | `30` | Seconds per image |
 | `TRANSITION` | `"crossfade"` | `"crossfade"` or `"cut"` |
 | `IMAGE_ORDER` | `"random"` | `"random"` or `"sequential"` |
 | `LATITUDE` | `33.749` | Your latitude (for weather) |
@@ -49,9 +50,9 @@ Open `slideshow.py` and edit the **USER CONFIGURATION** block at the top:
 ### Finding Your Google Drive Folder ID
 Your folder share link looks like:
 ```
-https://drive.google.com/drive/folders/1eJzfxxxxxxxxxxxxxxxxxxxxxxx?usp=sharing
+https://drive.google.com/drive/folders/1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS?usp=sharing
 ```
-The folder ID is the long string between `/folders/` and `?` — in this example: `1eJzfxxxxxxxxxxxxxxxxxxxxxxx`
+The folder ID is the long string between `/folders/` and `?` — in this example: `1eJzfu9uKTar_vFmrz5K8TSwo2zPSz8QS`
 
 ---
 
@@ -100,26 +101,43 @@ On first launch you'll see **"Syncing photos from Google Drive..."** on screen w
 
 ---
 
-## 6. Autostart on Boot (systemd)
+## 6. Autostart on Boot
 
+The most reliable way to autostart a pygame app on Pi OS is via the **desktop autostart** method, not systemd. Systemd has a race condition with the display server that causes GUI apps to silently fail on boot.
+
+### Step 1 — Make sure Pi OS is set to auto-login to the desktop
 ```bash
-# Copy the service file
-sudo cp slideshow@.service /etc/systemd/system/
+sudo raspi-config
+```
+Go to **System Options → Boot / Auto Login** and select **"Desktop Autologin"**. If the Pi boots to a login screen the autostart folder is never processed.
 
-# Enable and start it (replace 'pi' with your actual username)
-sudo systemctl daemon-reload
-sudo systemctl enable slideshow@pi.service
-sudo systemctl start slideshow@pi.service
-
-# Check status
-sudo systemctl status slideshow@pi.service
+### Step 2 — Create the autostart entry
+```bash
+mkdir -p ~/.config/autostart
+nano ~/.config/autostart/slideshow.desktop
 ```
 
-To stop or disable:
-```bash
-sudo systemctl stop slideshow@pi.service
-sudo systemctl disable slideshow@pi.service
+Paste this in (replace `admin` with your username if different):
+```ini
+[Desktop Entry]
+Type=Application
+Name=Slideshow
+Exec=/usr/bin/python3 /home/admin/slideshow.py
+X-GNOME-Autostart-enabled=true
 ```
+Save with `Ctrl+X` → `Y` → `Enter`, then reboot:
+```bash
+sudo reboot
+```
+
+The slideshow will launch automatically after the desktop finishes loading.
+
+### To stop the slideshow from autostarting
+Either delete the file:
+```bash
+rm ~/.config/autostart/slideshow.desktop
+```
+Or set `X-GNOME-Autostart-enabled=false` inside it to disable without deleting.
 
 ---
 
