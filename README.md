@@ -17,6 +17,7 @@ pip install pillow-heif --break-system-packages
 Place `slideshow.py` in your home directory:
 
 ```bash
+git clone https://github.com/carolinedunn/RPi-photoframe
 cd RPi-photoframe
 cp slideshow.py ~/slideshow.py
 chmod +x ~/slideshow.py
