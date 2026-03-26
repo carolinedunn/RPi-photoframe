@@ -21,10 +21,10 @@ import subprocess
 # ============================================================
 
 # Google Drive API key (from console.cloud.google.com)
-GDRIVE_API_KEY        = "AIzaSyB_xxxxxxxxxxxxxxxxxxxxxxx"
+GDRIVE_API_KEY        = "AIzaSyDcVvIbJel8iGxr3oQAOCQV42koYnvkLYI"
 
 # Google Drive folder ID (the long string from your share link)
-GDRIVE_FOLDER_ID      = "1eJzxxxxxxxxxxxxxxxxxxxxxxx"
+GDRIVE_FOLDER_ID      = "11Rybsl3eTISw1ksHZR6rwmh0PZapERy-"
 
 # Local folder where synced photos are cached on the Pi
 IMAGE_FOLDER          = os.path.expanduser("~/slideshow_cache/")
@@ -32,7 +32,7 @@ IMAGE_FOLDER          = os.path.expanduser("~/slideshow_cache/")
 # How often to check Google Drive for new/removed photos (seconds)
 GDRIVE_SYNC_INTERVAL  = 300   # 5 minutes
 
-SLIDE_DURATION        = 3           # seconds per image
+SLIDE_DURATION        = 30          # seconds per image
 TRANSITION            = "crossfade" # "crossfade" or "cut"
 IMAGE_ORDER           = "random"    # "random" or "sequential"
 
@@ -111,23 +111,54 @@ def fetch_gdrive_file_list(folder_id, api_key):
 
 
 def download_gdrive_file(file_id, api_key, local_path):
-    """Download a file from Google Drive using the API key."""
-    url = (
-        f"https://www.googleapis.com/drive/v3/files/{file_id}"
-        f"?alt=media&key={api_key}"
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    try:
+    """
+    Download a file from Google Drive using the API key.
+    Falls back to the usercontent URL if the API returns 403
+    (which happens when Google triggers a virus-scan warning on larger files).
+    """
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    def try_url(url):
+        req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=60) as resp:
-            content = resp.read()
-        with open(local_path, "wb") as f:
-            f.write(content)
-        print(f"[GDrive] Saved: {os.path.basename(local_path)} ({len(content)//1024} KB)")
-        return True
+            return resp.read()
+
+    def looks_like_image(data):
+        return data[:4] in (
+            b'\xff\xd8\xff\xe0', b'\xff\xd8\xff\xe1',  # JPEG
+            b'\x89PNG',                                        # PNG
+            b'GIF8',                                           # GIF
+        ) or data[:12] == b'\x00\x00\x00\x0cftyp'           # HEIC
+
+    # Method 1 — Drive API alt=media (works for most files)
+    try:
+        url1 = f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media&key={api_key}"
+        content = try_url(url1)
+        if looks_like_image(content):
+            with open(local_path, "wb") as f:
+                f.write(content)
+            print(f"[GDrive] Saved: {os.path.basename(local_path)} ({len(content)//1024} KB)")
+            return True
     except urllib.error.HTTPError as e:
-        print(f"[GDrive] Download HTTP {e.code} for {file_id}: {e.read().decode()[:200]}")
+        if e.code != 403:
+            print(f"[GDrive] Download HTTP {e.code} for {file_id}")
+            return False
+        # 403 — fall through to method 2
+
+    # Method 2 — usercontent download URL (handles virus-scan bypass for larger files)
+    try:
+        url2 = f"https://drive.usercontent.google.com/download?id={file_id}&export=download&authuser=0&confirm=t"
+        content = try_url(url2)
+        if looks_like_image(content):
+            with open(local_path, "wb") as f:
+                f.write(content)
+            print(f"[GDrive] Saved: {os.path.basename(local_path)} ({len(content)//1024} KB)")
+            return True
+        else:
+            print(f"[GDrive] 403 bypass failed for {file_id} — response was not an image")
     except Exception as e:
         print(f"[GDrive] Download error for {file_id}: {e}")
+
     return False
 
 
