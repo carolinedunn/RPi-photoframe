@@ -1,5 +1,11 @@
 # Raspberry Pi Photo Slideshow — Setup Guide
 
+<a href="https://youtu.be/2yzrWOAHWfI">
+  <img src="https://raw.githubusercontent.com/carolinedunn/RPi-photoframe/main/RPi-photoframe-thumbnail-play.jpg" width="720" alt="Raspberry Pi Photoframe Tutorial">
+</a>
+
+[Raspberry Pi Photo Frame Tutorial: Update from Your Phone + Auto-Boot Setup](https://youtu.be/2yzrWOAHWfI)
+
 ## 1. Install Dependencies
 
 ```bash
