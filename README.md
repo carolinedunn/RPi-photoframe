@@ -196,3 +196,14 @@ If `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` is missing, install it:
 ```bash
 sudo apt install -y fonts-dejavu-core
 ```
+
+---
+
+## 📚 A Woman’s Guide to Winning in Tech
+
+If you enjoyed this repo, check out my book, **A Woman’s Guide to Winning in Tech.** This book blends sharp humor with practical career strategies to help women navigate tech on their own terms—without changing who they are. Available on Amazon, Bookshop.org, Barnes & Noble, and IngramSpark.
+
+- 🌐 [Book Website](https://winningintech.com/) 
+- 📘 [Amazon](https://amzn.to/3YxHVO7)
+- [Instagram](https://www.instagram.com/winning.tech)
+- [Facebook](https://www.facebook.com/winningintech)
